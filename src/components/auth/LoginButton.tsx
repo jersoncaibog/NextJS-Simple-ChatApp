@@ -3,12 +3,11 @@
 import { setError, setLoading } from "@/lib/store/features/authSlice";
 import { useAppDispatch } from "@/lib/store/store";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { AuthError } from "@supabase/supabase-js";
 import { useState } from "react";
 
 export function LoginButton() {
   const dispatch = useAppDispatch();
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGoogleLogin = async () => {
@@ -42,9 +41,12 @@ export function LoginButton() {
       }
 
       console.log("Login: OAuth initiated successfully");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login: Error during login:", error);
-      dispatch(setError(error?.message || "Authentication failed"));
+      const errorMessage = error instanceof AuthError 
+        ? error.message 
+        : "Authentication failed";
+      dispatch(setError(errorMessage));
       setIsLoading(false);
     }
   };
