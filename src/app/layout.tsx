@@ -1,4 +1,4 @@
-import { ReduxProvider } from '@/components/providers/ReduxProvider'
+import { Providers } from '@/components/providers/ReduxProvider'
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
@@ -18,9 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ReduxProvider>
+        <Providers>
           {children}
-        </ReduxProvider>
+        </Providers>
       </body>
     </html>
   )

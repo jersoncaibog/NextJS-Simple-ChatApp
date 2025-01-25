@@ -1,33 +1,47 @@
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   try {
-    console.log('Middleware: Checking session for path:', request.nextUrl.pathname)
+    const pathname = request.nextUrl.pathname
+    console.log('Middleware: Path:', pathname)
+
+    // Skip middleware for auth callback and public routes
+    if (pathname.startsWith('/auth/callback')) {
+      console.log('Middleware: Skipping auth callback route')
+      return NextResponse.next()
+    }
+
     const res = NextResponse.next()
     const supabase = createMiddlewareClient({ req: request, res })
     
-    // Refresh session if expired - required for Server Components
-    const { data: { session } } = await supabase.auth.getSession()
-    const { data: { user } } = await supabase.auth.getUser()
+    // Refresh session if expired
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
-    const isAuthPage = request.nextUrl.pathname === '/login'
-    console.log('Middleware: Session status:', { hasSession: !!session, hasUser: !!user, isAuthPage })
-
-    if (!user && !isAuthPage) {
-      console.log('Middleware: Redirecting to login - no user')
+    if (sessionError) {
+      console.error('Middleware: Session error:', sessionError)
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    if (user && isAuthPage) {
-      console.log('Middleware: Redirecting to home - has user')
+    const isAuthPage = pathname === '/login'
+    console.log('Middleware: Auth check:', { hasSession: !!session, isAuthPage })
+
+    // Redirect if not authenticated
+    if (!session && !isAuthPage) {
+      console.log('Middleware: Redirecting to login - no session')
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
+    // Redirect if authenticated but on login page
+    if (session && isAuthPage) {
+      console.log('Middleware: Redirecting to home - has session')
       return NextResponse.redirect(new URL('/', request.url))
     }
 
     return res
   } catch (error) {
-    console.error('Middleware error:', error)
+    console.error('Middleware: Error:', error)
     return NextResponse.redirect(new URL('/login', request.url))
   }
 }
@@ -36,6 +50,6 @@ export const config = {
   matcher: [
     '/',
     '/login',
-    '/((?!api|_next/static|_next/image|favicon.ico|auth/callback).*))',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ]
 } 

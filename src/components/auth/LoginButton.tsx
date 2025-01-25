@@ -1,48 +1,59 @@
-'use client'
+"use client";
 
-import { supabase } from '@/lib/supabase'
-import { useAppDispatch } from '@/lib/store/store'
-import { setLoading, setError } from '@/lib/store/features/authSlice'
-import { useRouter } from 'next/navigation'
+import { setError, setLoading } from "@/lib/store/features/authSlice";
+import { useAppDispatch } from "@/lib/store/store";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export function LoginButton() {
-  const dispatch = useAppDispatch()
-  const router = useRouter()
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleGoogleLogin = async () => {
     try {
-      console.log("Starting Google login...")
-      dispatch(setLoading(true))
-      
-      const redirectURL = `${window.location.origin}/auth/callback`
-      console.log("Redirect URL:", redirectURL)
-      
+      setIsLoading(true);
+      dispatch(setLoading(true));
+      console.log("Login: Starting Google OAuth flow");
+
+      const redirectURL = `${window.location.origin}/auth/callback`;
+      console.log("Login: Redirect URL:", redirectURL);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: redirectURL,
           queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
+            access_type: "offline",
+            prompt: "consent",
           },
-        }
-      })
-      
-      console.log("OAuth response:", { data, error })
-      
-      if (error) throw error
+        },
+      });
+
+      if (error) {
+        console.error("Login: OAuth error:", error.message);
+        throw error;
+      }
+
+      if (!data) {
+        console.error("Login: No data returned from OAuth call");
+        throw new Error("Authentication failed");
+      }
+
+      console.log("Login: OAuth initiated successfully");
     } catch (error: any) {
-      console.error("Login error:", error)
-      dispatch(setError(error?.message || 'An error occurred'))
-    } finally {
-      dispatch(setLoading(false))
+      console.error("Login: Error during login:", error);
+      dispatch(setError(error?.message || "Authentication failed"));
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <button
       onClick={handleGoogleLogin}
-      className="flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      disabled={isLoading}
+      className="flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <svg className="h-5 w-5" viewBox="0 0 24 24">
         <path
@@ -62,7 +73,7 @@ export function LoginButton() {
           fill="#EA4335"
         />
       </svg>
-      Continue with Google
+      {isLoading ? "Connecting..." : "Continue with Google"}
     </button>
-  )
-} 
+  );
+}
