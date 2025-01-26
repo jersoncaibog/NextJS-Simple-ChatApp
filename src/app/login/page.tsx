@@ -1,7 +1,7 @@
 import { LoginButton } from '@/components/auth/LoginButton'
 import { Metadata } from 'next'
 import Image from 'next/image'
-import logo from '/public/images/potatochat.svg'
+import logo from '/public/images/p.png'
 
 export const metadata: Metadata = {
   title: 'Login - PotatoChat',
@@ -21,6 +21,7 @@ export default function LoginPage() {
               width={28}
               height={28}
               priority
+              unoptimized
             />
             <h1 className="text-xl font-bold text-gray-900">
               PotatoChat
