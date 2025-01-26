@@ -57,16 +57,19 @@ export function UserMenu() {
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DialogTrigger asChild>
-              <DropdownMenuItem className="cursor-pointer" >
+              <DropdownMenuItem className="cursor-pointer">
                 <Icon name="user" className="mr-2 h-4 w-4" />
                 <button>Profile</button>
               </DropdownMenuItem>
             </DialogTrigger>
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
               <Icon name="settings" className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={handleSignOut}>
+            <DropdownMenuItem
+              className="text-red-600 cursor-pointer "
+              onClick={handleSignOut}
+            >
               <Icon name="sign-out" className="mr-2 h-4 w-4" />
               Sign Out
             </DropdownMenuItem>

@@ -1,7 +1,6 @@
 'use client'
 
 import { Header } from '@/components/layout/Header'
-import { UserMenu } from '@/components/user/UserMenu'
 import { useState } from 'react'
 import { ChatMessage } from './ChatMessage'
 import { ChatSidebar } from './ChatSidebar'
@@ -39,9 +38,6 @@ export function ChatInterface() {
     <div className="flex h-screen">
       <div className="flex w-64 flex-col border-r bg-gray-50">
         <ChatSidebar />
-        <div className="border-t p-4 mt-auto ">
-          <UserMenu />
-        </div>
       </div>
       <main className="flex flex-1 flex-col">
         <Header 
