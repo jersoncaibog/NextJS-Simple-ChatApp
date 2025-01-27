@@ -7,7 +7,7 @@ export function ChatSidebar() {
     <>
       <div className="p-4 flex flex-row items-center gap-2">
         <UserMenu /> 
-        <h1>PotatoChat</h1> 
+        <h1 className=" select-none font-medium" >Chats</h1> 
       </div>
       <div className="px-2">
         <div className="space-y-1">

@@ -1,7 +1,13 @@
-import { NewChatIcon, SettingsIcon, SignOutIcon, UserIcon } from "./icons";
+import {
+  HamburgerMenuIcon,
+  NewChatIcon,
+  SettingsIcon,
+  SignOutIcon,
+  UserIcon,
+} from "./icons";
 
 interface IconProps {
-  name: "new-chat" | "user" | "settings" | "sign-out";
+  name: "new-chat" | "user" | "settings" | "sign-out" | "hamburger-menu";
   className?: string;
 }
 
@@ -10,6 +16,7 @@ const icons = {
   user: UserIcon,
   settings: SettingsIcon,
   "sign-out": SignOutIcon,
+  "hamburger-menu": HamburgerMenuIcon,
 };
 
 export function Icon({ name, className = "h-5 w-5" }: IconProps) {

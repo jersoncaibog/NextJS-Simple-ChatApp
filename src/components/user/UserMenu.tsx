@@ -49,8 +49,8 @@ export function UserMenu() {
       <Dialog>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="rounded-full bg-gray-100 p-2 text-gray-600 hover:bg-gray-200">
-              <Icon name="user" className="h-5 w-5" />
+            <button className="rounded-full p-2 text-gray-600 hover:bg-gray-200 outline-none border-0 ">
+              <Icon name="hamburger-menu" className="h-6 w-6" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent sideOffset={5} align="start" className="w-56">
