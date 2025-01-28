@@ -12,8 +12,8 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       {/* Header */}
-      <header className="fixed top-0 w-full bg-white shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+      <header className="fixed top-0 w-full bg-white border-b border-gray-300">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">
             <Image 
               src={logo}
@@ -49,8 +49,8 @@ export default function LoginPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+      <footer className="bg-white border-t border-gray-300">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500">
             © {new Date().getFullYear()} JDC. All rights reserved.
           </p>
