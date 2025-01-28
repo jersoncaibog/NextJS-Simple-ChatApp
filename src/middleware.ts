@@ -19,6 +19,8 @@ export async function middleware(request: NextRequest) {
     // Refresh session if expired
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
+    console.log("sa")
+
     if (sessionError) {
       console.error('Middleware: Session error:', sessionError)
       return NextResponse.redirect(new URL('/login', request.url))

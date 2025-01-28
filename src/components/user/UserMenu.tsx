@@ -16,15 +16,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Icon } from "@/components/ui/Icon";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { FaCog, FaSignOutAlt, FaUser } from "react-icons/fa";
+import { LuMenu } from "react-icons/lu";
 
 export function UserMenu() {
   const router = useRouter();
 
   const handleSignOut = async () => {
+    console.log("Signing out");
     await supabase.auth.signOut();
     router.refresh();
   };
@@ -49,8 +51,8 @@ export function UserMenu() {
       <Dialog>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="rounded-full p-2 text-gray-600 hover:bg-gray-200 outline-none border-0 ">
-              <Icon name="hamburger-menu" className="h-6 w-6" />
+            <button className="rounded-full p-2 text-zinc-800 hover:bg-gray-200 outline-none border-0 ">
+              <LuMenu className="h-6 w-6" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent sideOffset={5} align="start" className="w-56">
@@ -58,20 +60,20 @@ export function UserMenu() {
             <DropdownMenuSeparator />
             <DialogTrigger asChild>
               <DropdownMenuItem className="cursor-pointer">
-                <Icon name="user" className="mr-2 h-4 w-4" />
+                <FaUser className="mr-2 text-zinc-600" />
                 <button>Profile</button>
               </DropdownMenuItem>
             </DialogTrigger>
             <DropdownMenuItem className="cursor-pointer">
-              <Icon name="settings" className="mr-2 h-4 w-4" />
+              <FaCog className="mr-2 text-zinc-600" />
               Settings
             </DropdownMenuItem>
             <DropdownMenuItem
-              className="text-red-600 cursor-pointer "
+              className="cursor-pointer "
               onClick={handleSignOut}
             >
-              <Icon name="sign-out" className="mr-2 h-4 w-4" />
-              Sign Out
+              <FaSignOutAlt className="mr-2 text-red-400" />
+              <span className="text-red-500">Sign Out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
 
