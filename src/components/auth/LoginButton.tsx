@@ -1,67 +1,54 @@
 "use client";
 
-import { setError, setLoading } from "@/lib/store/features/authSlice";
-import { useAppDispatch } from "@/lib/store/store";
 import { supabase } from "@/lib/supabase";
-import { AuthError } from "@supabase/supabase-js";
 import { useState } from "react";
 
 export function LoginButton() {
-  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleGoogleLogin = async () => {
+  const handleLogin = async () => {
     try {
       setIsLoading(true);
-      dispatch(setLoading(true));
-      console.log("Login: Starting Google OAuth flow");
-
-      const redirectURL = `${window.location.origin}/auth/callback`;
-      console.log("Login: Redirect URL:", redirectURL);
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: redirectURL,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
+          redirectTo: `${location.origin}/auth/callback`,
         },
       });
-
-      if (error) {
-        console.error("Login: OAuth error:", error.message);
-        throw error;
-      }
-
-      if (!data) {
-        console.error("Login: No data returned from OAuth call");
-        throw new Error("Authentication failed");
-      }
-
-      console.log("Login: OAuth initiated successfully");
-    } catch (error: unknown) {
-      console.error("Login: Error during login:", error);
-      const errorMessage = error instanceof AuthError 
-        ? error.message 
-        : "Authentication failed";
-      dispatch(setError(errorMessage));
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
     <button
-      onClick={handleGoogleLogin}
+      onClick={handleLogin}
       disabled={isLoading}
       className="group relative flex w-full items-center justify-center gap-3 rounded-lg bg-white px-6 py-4 text-sm font-semibold text-gray-800 shadow-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed"
     >
       {isLoading ? (
         <>
-          <svg className="h-5 w-5 animate-spin text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <svg
+            className="h-5 w-5 animate-spin text-gray-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
           </svg>
           <span>Connecting to Google...</span>
         </>

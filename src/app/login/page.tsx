@@ -1,31 +1,29 @@
-import { LoginButton } from '@/components/auth/LoginButton'
-import { Metadata } from 'next'
-import Image from 'next/image'
-import logo from '/public/images/p.png'
+import { LoginButton } from "@/components/auth/LoginButton";
+import { Metadata } from "next";
+import Image from "next/image";
+import logo from "/public/images/p.png";
 
 export const metadata: Metadata = {
-  title: 'Login - PotatoChat',
-  description: 'Login to access the chat application',
-}
+  title: "Login - PotatoChat",
+  description: "Login to access the chat application",
+};
 
 export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       {/* Header */}
-      <header className="fixed top-0 w-full bg-white border-b border-gray-300">
+      <header className="fixed top-0 w-full border-b border-gray-300 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">
-            <Image 
+            <Image
               src={logo}
-              alt="PotatoChat Logo" 
+              alt="PotatoChat Logo"
               width={28}
               height={28}
               priority
               unoptimized
             />
-            <h1 className="text-xl font-bold text-gray-900">
-              PotatoChat
-            </h1>
+            <h1 className="text-xl font-bold text-gray-900">PotatoChat</h1>
           </div>
         </div>
       </header>
@@ -49,7 +47,7 @@ export default function LoginPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-300">
+      <footer className="border-t border-gray-300 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500">
             © {new Date().getFullYear()} JDC. All rights reserved.
@@ -57,5 +55,5 @@ export default function LoginPage() {
         </div>
       </footer>
     </div>
-  )
-} 
+  );
+}

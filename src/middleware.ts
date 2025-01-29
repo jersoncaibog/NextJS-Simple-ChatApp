@@ -4,56 +4,47 @@ import { NextResponse } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   try {
-    const pathname = request.nextUrl.pathname
-    console.log('Middleware: Path:', pathname)
-
-    // Skip middleware for auth callback and public routes
-    if (pathname.startsWith('/auth/callback')) {
-      console.log('Middleware: Skipping auth callback route')
-      return NextResponse.next()
-    }
-
     const res = NextResponse.next()
     const supabase = createMiddlewareClient({ req: request, res })
-    
-    // Refresh session if expired
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
-    console.log("session", session)
-    console.log("sessionError", sessionError)
 
-    if (sessionError) {
-      console.error('Middleware: Session error:', sessionError)
-      return NextResponse.redirect(new URL('/login', request.url))
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    // If there's no session and the user is trying to access a protected route
+    if (!session && request.nextUrl.pathname !== '/login') {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/login'
+      return NextResponse.redirect(redirectUrl)
     }
 
-    const isAuthPage = pathname === '/login'
-    console.log('Middleware: Auth check:', { hasSession: !!session, isAuthPage })
-
-    // Redirect if not authenticated
-    if (!session && !isAuthPage) {
-      console.log('Middleware: Redirecting to login - no session')
-      return NextResponse.redirect(new URL('/login', request.url))
+    // If there's a session and the user is trying to access login
+    if (session && request.nextUrl.pathname === '/login') {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/'
+      return NextResponse.redirect(redirectUrl)
     }
 
-    // Redirect if authenticated but on login page
-    if (session && isAuthPage) {
-      console.log('Middleware: Redirecting to home - has session')
-      return NextResponse.redirect(new URL('/', request.url))
-    }
-
-    console.log("end of middleware")
     return res
   } catch (error) {
-    console.error('Middleware: Error:', error)
-    return NextResponse.redirect(new URL('/login', request.url))
+    console.error('Middleware error:', error)
+    // On error, redirect to login
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = '/login'
+    return NextResponse.redirect(redirectUrl)
   }
 }
 
+// Update matcher to include all routes that need auth
 export const config = {
   matcher: [
-    '/',
-    '/login',
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ]
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 } 
