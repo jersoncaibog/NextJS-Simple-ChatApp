@@ -19,7 +19,8 @@ export async function middleware(request: NextRequest) {
     // Refresh session if expired
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
-    console.log("sa")
+    console.log("session", session)
+    console.log("sessionError", sessionError)
 
     if (sessionError) {
       console.error('Middleware: Session error:', sessionError)
@@ -41,6 +42,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/', request.url))
     }
 
+    console.log("end of middleware")
     return res
   } catch (error) {
     console.error('Middleware: Error:', error)

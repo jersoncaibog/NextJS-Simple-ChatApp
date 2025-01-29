@@ -1,15 +1,18 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { supabase } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
+
+  console.log("app/auth/callback/route.ts...")
+
   try {
     const requestUrl = new URL(request.url)
     const code = requestUrl.searchParams.get('code')
     const next = requestUrl.searchParams.get('next') ?? '/'
 
+    console.log(requestUrl)
     console.log('Auth Callback: Starting with code:', !!code)
 
     if (!code) {
@@ -17,10 +20,7 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL('/login', requestUrl.origin))
     }
 
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
-
-    // Exchange the code for a session
+    // Use the Supabase client to exchange the code for a session
     const { data: { session }, error: sessionError } = await supabase.auth.exchangeCodeForSession(code)
     
     if (sessionError) {
