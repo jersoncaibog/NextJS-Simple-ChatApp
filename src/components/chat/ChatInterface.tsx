@@ -54,33 +54,44 @@ export function ChatInterface({
     }
 
     try {
+      // Get total count for pagination
+      const { count } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .eq("chat_id", chatId);
+
+      const from = isInitial
+        ? Math.max((count || 0) - MESSAGES_PER_PAGE, 0)
+        : Math.max((count || 0) - MESSAGES_PER_PAGE - messages.length, 0);
+
+      const to = isInitial
+        ? (count || 0) - 1
+        : (count || 0) - messages.length - 1;
+
       const { data: newMessages, error } = await supabase
         .from("messages")
         .select("*")
         .eq("chat_id", chatId)
         .order("created_at", { ascending: true })
-        .range(
-          isInitial ? 0 : messages.length,
-          isInitial
-            ? MESSAGES_PER_PAGE - 1
-            : messages.length + MESSAGES_PER_PAGE - 1
-        );
+        .range(from, to);
 
       if (error) throw error;
 
       if (newMessages) {
         setMessages((prev) =>
-          isInitial ? newMessages : [...prev, ...newMessages]
+          isInitial ? newMessages : [...newMessages, ...prev]
         );
-        setHasMore(newMessages.length === MESSAGES_PER_PAGE);
+        setHasMore(from > 0);
+        // Only scroll to bottom on initial load
+        if (isInitial) {
+          setTimeout(scrollToBottom, 100);
+        }
       }
     } catch (error) {
       console.error("Error loading messages:", error);
     } finally {
       if (isInitial) {
         setLoading(false);
-        // Scroll to bottom after initial load
-        setTimeout(scrollToBottom, 100);
       } else {
         setLoadingMore(false);
       }
@@ -97,7 +108,7 @@ export function ChatInterface({
     }
   };
 
-  // Load chat and initial messages
+  // Subscribe to new messages
   useEffect(() => {
     if (!chatId) {
       setChat(null);
@@ -159,6 +170,7 @@ export function ChatInterface({
         (payload) => {
           if (payload.eventType === "INSERT") {
             setMessages((prev) => [...prev, payload.new as Message]);
+            // Scroll to bottom for new messages
             scrollToBottom();
           } else if (payload.eventType === "UPDATE") {
             setMessages((prev) =>
@@ -198,6 +210,7 @@ export function ChatInterface({
 
       if (error) throw error;
       setNewMessage("");
+      scrollToBottom();
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
@@ -308,18 +321,20 @@ export function ChatInterface({
         </div>
       </div>
 
+      {/* Loading Spinner */}
+      {loadingMore && (
+        <div className="absolute left-0 right-0 top-[72px] flex justify-center border-b bg-background/80 py-2 backdrop-blur-sm">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      )}
+
       {/* Chat Messages */}
       <div
         ref={messagesContainerRef}
-        onScroll={handleScroll}
         className="flex-1 overflow-y-auto p-4"
+        onScroll={handleScroll}
       >
         <div className="flex flex-col-reverse">
-          {loadingMore && (
-            <div className="text-center text-sm text-muted-foreground py-2">
-              Loading more messages...
-            </div>
-          )}
           <div className="space-y-1">
             {messages.map((message) => (
               <ChatMessage
