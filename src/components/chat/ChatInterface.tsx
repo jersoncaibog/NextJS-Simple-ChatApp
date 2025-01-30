@@ -58,13 +58,20 @@ export function ChatInterface({
         .from("messages")
         .select("*")
         .eq("chat_id", chatId)
-        .order("created_at", { ascending: false })
-        .range(messages.length, messages.length + MESSAGES_PER_PAGE - 1);
+        .order("created_at", { ascending: true })
+        .range(
+          isInitial ? 0 : messages.length,
+          isInitial
+            ? MESSAGES_PER_PAGE - 1
+            : messages.length + MESSAGES_PER_PAGE - 1
+        );
 
       if (error) throw error;
 
       if (newMessages) {
-        setMessages((prev) => [...newMessages.reverse(), ...prev]);
+        setMessages((prev) =>
+          isInitial ? newMessages : [...prev, ...newMessages]
+        );
         setHasMore(newMessages.length === MESSAGES_PER_PAGE);
       }
     } catch (error) {
@@ -86,16 +93,7 @@ export function ChatInterface({
     if (!container || loadingMore || !hasMore) return;
 
     if (container.scrollTop <= 100) {
-      // Save current scroll position and height
-      const scrollHeight = container.scrollHeight;
-
-      loadMessages().then(() => {
-        // Restore scroll position
-        requestAnimationFrame(() => {
-          const newScrollHeight = container.scrollHeight;
-          container.scrollTop = newScrollHeight - scrollHeight;
-        });
-      });
+      loadMessages();
     }
   };
 
@@ -175,6 +173,8 @@ export function ChatInterface({
 
     return () => {
       supabase.removeChannel(channel);
+      // Clear messages when changing chats
+      setMessages([]);
     };
   }, [chatId]);
 
@@ -314,22 +314,24 @@ export function ChatInterface({
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto p-4"
       >
-        {loadingMore && (
-          <div className="text-center text-sm text-muted-foreground py-2">
-            Loading more messages...
+        <div className="flex flex-col-reverse">
+          {loadingMore && (
+            <div className="text-center text-sm text-muted-foreground py-2">
+              Loading more messages...
+            </div>
+          )}
+          <div className="space-y-1">
+            {messages.map((message) => (
+              <ChatMessage
+                key={message.id}
+                content={message.content}
+                created_at={message.created_at}
+                is_edited={message.is_edited}
+                isFromOtherUser={message.profile_id === chat?.profiles?.id}
+              />
+            ))}
+            <div ref={messagesEndRef} />
           </div>
-        )}
-        <div className="space-y-1">
-          {messages.map((message) => (
-            <ChatMessage
-              key={message.id}
-              content={message.content}
-              created_at={message.created_at}
-              is_edited={message.is_edited}
-              isFromOtherUser={message.profile_id === chat?.profiles?.id}
-            />
-          ))}
-          <div ref={messagesEndRef} />
         </div>
       </div>
 
