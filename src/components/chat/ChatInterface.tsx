@@ -266,7 +266,7 @@ export function ChatInterface({
   return (
     <div className="flex h-full flex-col">
       {/* Chat Header */}
-      <div className="border-b p-4">
+      <div className="border-b p-4 fixed md:relative top-0 left-0 right-0 bg-background z-10  ">
         <div className="flex items-center gap-3">
           {/* Back button - only on mobile */}
           {chatId && onBack && (
@@ -351,7 +351,7 @@ export function ChatInterface({
       </div>
 
       {/* Message Input */}
-      <div className="border-t p-4">
+      <div className="border-t p-4 fixed md:relative bottom-0 left-0 right-0 bg-background z-10">
         <form
           onSubmit={(e) => {
             e.preventDefault();
