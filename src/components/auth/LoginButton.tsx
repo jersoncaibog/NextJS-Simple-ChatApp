@@ -9,15 +9,28 @@ export function LoginButton() {
   const handleLogin = async () => {
     try {
       setIsLoading(true);
-      await supabase.auth.signInWithOAuth({
+      const { error, data } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${location.origin}/auth/callback`,
+          queryParams: {
+            access_type: "offline",
+            // prompt: "consent",
+          },
+          scopes: "email profile",
         },
       });
+
+      if (error) throw error;
+
+      if (!data.url) {
+        throw new Error("No URL returned from OAuth provider");
+      }
+
+      // Redirect to the authorization URL
+      window.location.href = data.url;
     } catch (error) {
       console.error("Error:", error);
-    } finally {
       setIsLoading(false);
     }
   };

@@ -1,22 +1,47 @@
+"use client";
+
+import { useState } from "react";
+
 interface ChatMessageProps {
-  message: string
-  isUser: boolean
-  timestamp: string
+  content: string;
+  created_at: string;
+  is_edited: boolean;
+  isFromOtherUser: boolean;
 }
 
-export function ChatMessage({ message, isUser, timestamp }: ChatMessageProps) {
+export function ChatMessage({
+  content,
+  created_at,
+  is_edited,
+  isFromOtherUser,
+}: ChatMessageProps) {
+  const [showTime, setShowTime] = useState(false);
+
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div className={`max-w-[70%] rounded-lg p-3 ${
-        isUser ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'
-      }`}>
-        <p className="text-sm">{message}</p>
-        <span className={`mt-1 block text-xs ${
-          isUser ? 'text-blue-100' : 'text-gray-500'
-        }`}>
-          {timestamp}
-        </span>
+    <div
+      className={`flex ${isFromOtherUser ? "justify-start" : "justify-end"}`}
+    >
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setShowTime(!showTime)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            setShowTime(!showTime);
+          }
+        }}
+        className={`rounded-lg px-5 py-2 max-w-[70%] cursor-pointer ${
+          isFromOtherUser ? "bg-accent" : "bg-primary text-primary-foreground"
+        }`}
+      >
+        <div className="text-sm">{content}</div>
+        {showTime && (
+          <div className="text-[10px] opacity-70 mt-1">
+            {new Date(created_at).toLocaleTimeString()}
+            {is_edited && " (edited)"}
+          </div>
+        )}
       </div>
     </div>
-  )
-} 
+  );
+}

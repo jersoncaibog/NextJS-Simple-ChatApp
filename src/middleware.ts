@@ -4,12 +4,16 @@ import { NextResponse } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   try {
+    // Skip middleware for auth callback and public routes
+    if (request.nextUrl.pathname.startsWith('/auth/callback')) {
+      return NextResponse.next()
+    }
+
     const res = NextResponse.next()
     const supabase = createMiddlewareClient({ req: request, res })
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    // Refresh session if expired
+    const { data: { session } } = await supabase.auth.getSession()
 
     // If there's no session and the user is trying to access a protected route
     if (!session && request.nextUrl.pathname !== '/login') {
@@ -28,10 +32,8 @@ export async function middleware(request: NextRequest) {
     return res
   } catch (error) {
     console.error('Middleware error:', error)
-    // On error, redirect to login
-    const redirectUrl = request.nextUrl.clone()
-    redirectUrl.pathname = '/login'
-    return NextResponse.redirect(redirectUrl)
+    // On error, allow the request to proceed to avoid redirect loops
+    return NextResponse.next()
   }
 }
 

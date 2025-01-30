@@ -1,40 +1,56 @@
 "use client";
 
 import { UserMenu } from "@/components/user/UserMenu";
+import { useCallback, useState } from "react";
+import { GoPlus } from "react-icons/go";
+import { AddChatDialog } from "./AddChatDialog";
+import { ChatList } from "./ChatList";
 
-export function ChatSidebar() {
+interface ChatSidebarProps {
+  activeChat?: string;
+  onChatSelect: (chatId: string) => void;
+  addDialogOpen: boolean;
+  onOpenAddChat: () => void;
+}
+
+export function ChatSidebar({
+  activeChat,
+  onChatSelect,
+  addDialogOpen,
+  onOpenAddChat,
+}: ChatSidebarProps) {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleChatCreated = useCallback(() => {
+    setRefreshKey((prev) => prev + 1);
+    onOpenAddChat();
+  }, [onOpenAddChat]);
+
   return (
     <>
-      <div className="p-4 flex flex-row items-center gap-2">
-        <UserMenu />
-        <h1 className=" select-none font-bold text-zinc-700">Chats</h1>
-      </div>
-      <div className="px-2">
-        <div className="space-y-1">
-          <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-500">
-              JD
-            </div>
-            <div className="flex-1 text-left">
-              <div className="font-medium">John Doe</div>
-              <div className="text-xs text-gray-500">
-                Last message: 2 hours ago
-              </div>
-            </div>
-          </button>
-          <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-500">
-              AS
-            </div>
-            <div className="flex-1 text-left">
-              <div className="font-medium">Alice Smith</div>
-              <div className="text-xs text-gray-500">
-                Last message: Yesterday
-              </div>
-            </div>
-          </button>
+      <div className="p-4 flex flex-row items-center justify-between">
+        <div className="flex items-center gap-2">
+          <UserMenu />
+          <h1 className="select-none font-bold text-foreground">Chats</h1>
         </div>
+        <button
+          onClick={onOpenAddChat}
+          className="p-2 rounded-full hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <GoPlus className="w-6 h-6" />
+        </button>
       </div>
+
+      <AddChatDialog
+        open={addDialogOpen}
+        onOpenChange={onOpenAddChat}
+        onChatCreated={handleChatCreated}
+      />
+      <ChatList
+        key={refreshKey}
+        activeChat={activeChat}
+        onChatSelect={onChatSelect}
+      />
     </>
   );
 }
