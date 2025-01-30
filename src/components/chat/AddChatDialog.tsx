@@ -135,7 +135,7 @@ export function AddChatDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="w-96 max-w-[90vw] rounded-lg">
         <DialogHeader>
           <DialogTitle>Start New Chat</DialogTitle>
         </DialogHeader>

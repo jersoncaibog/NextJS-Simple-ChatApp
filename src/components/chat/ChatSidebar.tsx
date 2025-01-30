@@ -9,22 +9,16 @@ import { ChatList } from "./ChatList";
 interface ChatSidebarProps {
   activeChat?: string;
   onChatSelect: (chatId: string) => void;
-  addDialogOpen: boolean;
-  onOpenAddChat: () => void;
 }
 
-export function ChatSidebar({
-  activeChat,
-  onChatSelect,
-  addDialogOpen,
-  onOpenAddChat,
-}: ChatSidebarProps) {
+export function ChatSidebar({ activeChat, onChatSelect }: ChatSidebarProps) {
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleChatCreated = useCallback(() => {
     setRefreshKey((prev) => prev + 1);
-    onOpenAddChat();
-  }, [onOpenAddChat]);
+    setAddDialogOpen(false);
+  }, []);
 
   return (
     <>
@@ -34,7 +28,7 @@ export function ChatSidebar({
           <h1 className="select-none font-bold text-foreground">Chats</h1>
         </div>
         <button
-          onClick={onOpenAddChat}
+          onClick={() => setAddDialogOpen(true)}
           className="p-2 rounded-full hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
         >
           <GoPlus className="w-6 h-6" />
@@ -43,13 +37,15 @@ export function ChatSidebar({
 
       <AddChatDialog
         open={addDialogOpen}
-        onOpenChange={onOpenAddChat}
+        onOpenChange={setAddDialogOpen}
         onChatCreated={handleChatCreated}
       />
       <ChatList
         key={refreshKey}
         activeChat={activeChat}
-        onChatSelect={onChatSelect}
+        onChatSelect={(chatId) => {
+          onChatSelect(chatId);
+        }}
       />
     </>
   );

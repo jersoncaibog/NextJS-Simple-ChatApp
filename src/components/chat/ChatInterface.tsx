@@ -2,7 +2,7 @@
 
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ChatParticipant } from "./ChatList";
 import { ChatMessage } from "./ChatMessage";
 
@@ -19,20 +19,92 @@ type Message = {
 interface ChatInterfaceProps {
   chatId?: string;
   onOpenAddChat?: () => void;
+  onBack?: () => void;
 }
 
-export function ChatInterface({ chatId, onOpenAddChat }: ChatInterfaceProps) {
+const MESSAGES_PER_PAGE = 20;
+
+export function ChatInterface({
+  chatId,
+  onOpenAddChat,
+  onBack,
+}: ChatInterfaceProps) {
   const [chat, setChat] = useState<ChatParticipant | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Load chat and messages
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Load initial messages
+  const loadMessages = async (isInitial = false) => {
+    if (!chatId) return;
+
+    if (isInitial) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+
+    try {
+      const { data: newMessages, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("chat_id", chatId)
+        .order("created_at", { ascending: false })
+        .range(messages.length, messages.length + MESSAGES_PER_PAGE - 1);
+
+      if (error) throw error;
+
+      if (newMessages) {
+        setMessages((prev) => [...newMessages.reverse(), ...prev]);
+        setHasMore(newMessages.length === MESSAGES_PER_PAGE);
+      }
+    } catch (error) {
+      console.error("Error loading messages:", error);
+    } finally {
+      if (isInitial) {
+        setLoading(false);
+        // Scroll to bottom after initial load
+        setTimeout(scrollToBottom, 100);
+      } else {
+        setLoadingMore(false);
+      }
+    }
+  };
+
+  // Handle scroll to load more
+  const handleScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container || loadingMore || !hasMore) return;
+
+    if (container.scrollTop <= 100) {
+      // Save current scroll position and height
+      const scrollHeight = container.scrollHeight;
+
+      loadMessages().then(() => {
+        // Restore scroll position
+        requestAnimationFrame(() => {
+          const newScrollHeight = container.scrollHeight;
+          container.scrollTop = newScrollHeight - scrollHeight;
+        });
+      });
+    }
+  };
+
+  // Load chat and initial messages
   useEffect(() => {
     if (!chatId) {
       setChat(null);
       setMessages([]);
+      setHasMore(true);
       return;
     }
 
@@ -66,20 +138,10 @@ export function ChatInterface({ chatId, onOpenAddChat }: ChatInterfaceProps) {
           profiles: profile,
         });
 
-        // Load messages
-        const { data: messages } = await supabase
-          .from("messages")
-          .select("*")
-          .eq("chat_id", chatId)
-          .order("created_at", { ascending: true });
-
-        if (messages) {
-          setMessages(messages);
-        }
+        // Load initial messages
+        await loadMessages(true);
       } catch (error) {
         console.error("Error loading chat:", error);
-      } finally {
-        setLoading(false);
       }
     }
 
@@ -99,6 +161,7 @@ export function ChatInterface({ chatId, onOpenAddChat }: ChatInterfaceProps) {
         (payload) => {
           if (payload.eventType === "INSERT") {
             setMessages((prev) => [...prev, payload.new as Message]);
+            scrollToBottom();
           } else if (payload.eventType === "UPDATE") {
             setMessages((prev) =>
               prev.map((msg) =>
@@ -192,7 +255,28 @@ export function ChatInterface({ chatId, onOpenAddChat }: ChatInterfaceProps) {
       {/* Chat Header */}
       <div className="border-b p-4">
         <div className="flex items-center gap-3">
-          {chat.profiles?.avatar_url ? (
+          {/* Back button - only on mobile */}
+          {chatId && onBack && (
+            <button
+              onClick={onBack}
+              className="md:hidden p-2 -ml-2 rounded-full hover:bg-accent"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m15 18-6-6 6-6" />
+              </svg>
+            </button>
+          )}
+          {chat?.profiles?.avatar_url ? (
             <Image
               src={chat.profiles.avatar_url}
               alt={chat.profiles.full_name || "User avatar"}
@@ -203,7 +287,7 @@ export function ChatInterface({ chatId, onOpenAddChat }: ChatInterfaceProps) {
             />
           ) : (
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-              {chat.profiles
+              {chat?.profiles
                 ? (chat.profiles.full_name || chat.profiles.email)
                     .split(" ")
                     .map((word) => word[0])
@@ -215,17 +299,26 @@ export function ChatInterface({ chatId, onOpenAddChat }: ChatInterfaceProps) {
           )}
           <div>
             <div className="font-medium">
-              {chat.profiles?.full_name || "Anonymous User"}
+              {chat?.profiles?.full_name || "Anonymous User"}
             </div>
             <div className="text-xs text-muted-foreground">
-              {chat.profiles?.email || "No email"}
+              {chat?.profiles?.email || "No email"}
             </div>
           </div>
         </div>
       </div>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-4"
+      >
+        {loadingMore && (
+          <div className="text-center text-sm text-muted-foreground py-2">
+            Loading more messages...
+          </div>
+        )}
         <div className="space-y-1">
           {messages.map((message) => (
             <ChatMessage
@@ -233,9 +326,10 @@ export function ChatInterface({ chatId, onOpenAddChat }: ChatInterfaceProps) {
               content={message.content}
               created_at={message.created_at}
               is_edited={message.is_edited}
-              isFromOtherUser={message.profile_id === chat.profiles?.id}
+              isFromOtherUser={message.profile_id === chat?.profiles?.id}
             />
           ))}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 

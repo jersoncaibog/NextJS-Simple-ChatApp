@@ -91,12 +91,12 @@ export function UserMenu() {
     <div>
       {/* Settings Dialog */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-96 max-w-[90vw] rounded-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-4 border-b">
-            <DialogTitle className="text-2xl font-semibold tracking-tight">
+            <DialogTitle className="text-start text-2xl font-semibold tracking-tight">
               Settings
             </DialogTitle>
-            <DialogDescription className="text-base text-muted-foreground">
+            <DialogDescription className="text-start text-base text-muted-foreground">
               Manage your application preferences
             </DialogDescription>
           </DialogHeader>
@@ -178,10 +178,10 @@ export function UserMenu() {
 
       {/* Profile Dialog */}
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className=" rounded-lg w-96 max-w-[90vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Profile</DialogTitle>
-            <DialogDescription>Your profile information.</DialogDescription>
+            <DialogTitle className=" text-start" >Profile</DialogTitle>
+            <DialogDescription className="text-start" >Your profile information.</DialogDescription>
           </DialogHeader>
 
           {isLoading ? (

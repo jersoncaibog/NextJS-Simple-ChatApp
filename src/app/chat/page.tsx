@@ -6,25 +6,27 @@ import { useState } from "react";
 
 export default function ChatPage() {
   const [activeChatId, setActiveChatId] = useState<string>();
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
-      <div className="flex w-80 flex-col border-r bg-background">
-        <ChatSidebar
-          activeChat={activeChatId}
-          onChatSelect={setActiveChatId}
-          addDialogOpen={addDialogOpen}
-          onOpenAddChat={() => setAddDialogOpen((prev) => !prev)}
-        />
+      {/* Sidebar - Full width on mobile when no active chat */}
+      <div
+        className={`${
+          activeChatId ? "hidden md:flex" : "flex"
+        } w-full md:w-80 flex-col border-r bg-background`}
+      >
+        <ChatSidebar activeChat={activeChatId} onChatSelect={setActiveChatId} />
       </div>
 
-      {/* Main Chat Interface */}
-      <main className="flex flex-1 flex-col">
+      {/* Main Chat Interface - Full width on mobile when active */}
+      <main
+        className={`${
+          activeChatId ? "flex" : "hidden md:flex"
+        } flex-1 flex-col`}
+      >
         <ChatInterface
           chatId={activeChatId}
-          onOpenAddChat={() => setAddDialogOpen((prev) => !prev)}
+          onBack={() => setActiveChatId(undefined)}
         />
       </main>
     </div>
