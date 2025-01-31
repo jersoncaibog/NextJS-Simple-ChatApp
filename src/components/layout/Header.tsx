@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 interface HeaderProps {
   profilePicture?: string;
   userName: string;
@@ -14,10 +16,13 @@ export function Header({
   const renderProfile = () => {
     if (profilePicture) {
       return (
-        <img
+        <Image
           src={profilePicture}
           alt="Profile"
+          width={32}
+          height={32}
           className="h-8 w-8 rounded-full mr-2"
+          unoptimized
         />
       );
     } else {

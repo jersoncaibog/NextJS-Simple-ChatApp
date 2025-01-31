@@ -3,7 +3,7 @@
 import { supabase } from "@/lib/supabase";
 import { PostgrestError } from "@supabase/supabase-js";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChatParticipant } from "./ChatList";
 import { ChatMessage } from "./ChatMessage";
 
@@ -71,17 +71,16 @@ export function ChatInterface({
     }
   }, [inputRef, editingMessage]);
 
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      if (messagesContainerRef.current) {
-        const container = messagesContainerRef.current;
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: "smooth",
-        });
-      }
-    }, 100);
-  };
+  // Memoize scrollToBottom function
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, []);
 
   const handleScroll = async (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
@@ -134,7 +133,7 @@ export function ChatInterface({
   };
 
   // Load initial messages
-  const loadInitialMessages = async () => {
+  const loadInitialMessages = useCallback(async () => {
     if (!chatId) return;
     setLoading(true);
 
@@ -151,16 +150,14 @@ export function ChatInterface({
       if (initialMessages) {
         setMessages(initialMessages);
         setHasMore(initialMessages.length === MESSAGES_PER_PAGE);
-        requestAnimationFrame(() => {
-          requestAnimationFrame(scrollToBottom);
-        });
+        scrollToBottom();
       }
     } catch (error) {
       console.error("Error loading messages:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [chatId, scrollToBottom]);
 
   // Load chat details and initial messages
   useEffect(() => {
@@ -168,13 +165,11 @@ export function ChatInterface({
       if (!chatId) return;
 
       try {
-        // First get the current user
         const {
           data: { user: currentUser },
         } = await supabase.auth.getUser();
         if (!currentUser) return;
 
-        // Then get the chat with participants
         const { data: chat, error } = (await supabase
           .from("chat_participants")
           .select(
@@ -222,7 +217,7 @@ export function ChatInterface({
       setMessages([]);
       setHasMore(true);
     };
-  }, [chatId]);
+  }, [chatId, loadInitialMessages]);
 
   // Subscribe to new messages
   useEffect(() => {
