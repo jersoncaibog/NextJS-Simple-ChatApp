@@ -81,7 +81,7 @@ export function UserMenu() {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      router.refresh();
+      router.push("/login");
     } catch (error) {
       console.error("Error signing out:", error);
     }
@@ -180,8 +180,10 @@ export function UserMenu() {
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
         <DialogContent className=" rounded-lg w-96 max-w-[90vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className=" text-start" >Profile</DialogTitle>
-            <DialogDescription className="text-start" >Your profile information.</DialogDescription>
+            <DialogTitle className=" text-start">Profile</DialogTitle>
+            <DialogDescription className="text-start">
+              Your profile information.
+            </DialogDescription>
           </DialogHeader>
 
           {isLoading ? (
