@@ -13,13 +13,16 @@ export default function Home() {
         data: { session },
         error,
       } = await supabase.auth.getSession();
+
       if (error) {
         console.error("Error fetching user data:", error);
+        router.push("/login");
         return;
       }
 
       if (!session?.user) {
         console.log("No user logged in");
+        router.push("/login");
         return;
       }
 
@@ -38,8 +41,8 @@ export default function Home() {
         .single();
 
       if (profileError && profileError.code !== "PGRST116") {
-        // PGRST116 means no rows returned
         console.error("Error checking profile:", profileError);
+        router.push("/login");
         return;
       }
 
@@ -62,9 +65,10 @@ export default function Home() {
 
         if (insertError) {
           console.error("Error creating profile:", insertError);
-        } else {
-          console.log("Created new profile for user");
+          router.push("/login");
+          return;
         }
+        console.log("Created new profile for user");
       }
 
       // Redirect to chat page
