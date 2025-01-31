@@ -221,7 +221,12 @@ export function UserMenu() {
       {/* Dropdown Menu */}
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
-          <button className="rounded-full p-2 text-foreground hover:bg-accent outline-none border-0">
+          <button
+            className="rounded-full p-2 text-foreground hover:bg-accent outline-none border-0 relative z-20"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
             <LuMenu className="h-6 w-6" />
           </button>
         </DropdownMenuTrigger>
