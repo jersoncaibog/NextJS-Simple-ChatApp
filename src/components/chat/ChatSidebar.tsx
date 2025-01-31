@@ -28,7 +28,10 @@ export function ChatSidebar({ activeChat, onChatSelect }: ChatSidebarProps) {
           <h1 className="select-none font-bold text-foreground">Chats</h1>
         </div>
         <button
-          onClick={() => setAddDialogOpen(true)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setAddDialogOpen(true)
+          }}
           className="p-2 rounded-full hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
         >
           <GoPlus className="w-6 h-6" />
