@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * ChatMessage Component
+ *
+ * This component renders an individual chat message with the following features:
+ * - Different styling for sent and received messages
+ * - Click to toggle timestamp and actions
+ * - Edit and delete capabilities for own messages
+ * - Message status indicators (sending/sent)
+ * - Confirmation dialog for message deletion
+ */
+
 import {
   Dialog,
   DialogContent,
@@ -18,16 +29,17 @@ import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 
+// Props interface for the ChatMessage component
 interface ChatMessageProps {
-  id: string;
-  content: string;
-  created_at: string;
-  is_edited: boolean;
-  isFromOtherUser: boolean;
-  profile_id: string;
-  status?: "sending" | "sent";
-  onMessageDeleted?: () => void;
-  onEdit?: () => void;
+  id: string; // Unique identifier for the message
+  content: string; // The message content
+  created_at: string; // Timestamp when message was created
+  is_edited: boolean; // Whether the message has been edited
+  isFromOtherUser: boolean; // Whether the message is from another user
+  profile_id: string; // ID of the user who sent the message
+  status?: "sending" | "sent"; // Message delivery status
+  onMessageDeleted?: () => void; // Callback when message is deleted
+  onEdit?: () => void; // Callback when message is edited
 }
 
 export function ChatMessage({
@@ -41,10 +53,12 @@ export function ChatMessage({
   onMessageDeleted,
   onEdit,
 }: ChatMessageProps) {
-  const [showTime, setShowTime] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isCurrentUser, setIsCurrentUser] = useState(false);
+  // State for UI interactions
+  const [showTime, setShowTime] = useState(false); // Controls visibility of timestamp and actions
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false); // Controls delete confirmation dialog
+  const [isCurrentUser, setIsCurrentUser] = useState(false); // Whether the message is from current user
 
+  // Check if the message is from the current user on component mount
   useEffect(() => {
     async function checkCurrentUser() {
       const {
@@ -55,12 +69,11 @@ export function ChatMessage({
     checkCurrentUser();
   }, [profile_id]);
 
+  // Handle message deletion with database update
   const handleDelete = async () => {
     try {
       const { error } = await supabase.from("messages").delete().eq("id", id);
-
       if (error) throw error;
-
       onMessageDeleted?.();
       setShowDeleteDialog(false);
     } catch (error) {
@@ -70,6 +83,7 @@ export function ChatMessage({
 
   return (
     <>
+      {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -96,17 +110,18 @@ export function ChatMessage({
         </DialogContent>
       </Dialog>
 
+      {/* Message Container - Handles left/right alignment */}
       <div
         className={`flex ${
           isFromOtherUser ? "justify-start" : "justify-end text-right"
         }`}
       >
+        {/* Message Wrapper - Handles click interactions */}
         <div
-          className="flex flex-col relative group"
-          onMouseEnter={() => setShowTime(true)}
-          onMouseLeave={() => setShowTime(false)}
+          className="flex flex-col relative group touch-manipulation"
           onClick={() => setShowTime(!showTime)}
         >
+          {/* Time and Status Section - Shows/hides on click */}
           <div
             className={`overflow-hidden transition-all duration-200 ease-in-out ${
               showTime ? "max-h-8 opacity-100 mb-1 mt-2" : "max-h-0 opacity-0"
@@ -126,12 +141,14 @@ export function ChatMessage({
             </div>
           </div>
 
+          {/* Message Content and Actions Area */}
           <div className="flex gap-2 items-center">
+            {/* Message Actions Menu - Only for own messages */}
             {!isFromOtherUser && isCurrentUser && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild disabled={!showTime}>
                   <button
-                    className={`p-1.5 rounded-full opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-accent active:bg-accent focus:bg-accent focus:opacity-100 ${
+                    className={`p-1.5 rounded-full transition-opacity hover:bg-accent active:bg-accent focus:bg-accent ${
                       showTime ? "opacity-100" : "opacity-0"
                     }`}
                     aria-label="Message actions"
@@ -139,10 +156,7 @@ export function ChatMessage({
                     <BsThreeDots className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="min-w-[100px]"
-                >
+                <DropdownMenuContent align="end" className="min-w-[100px]">
                   <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive"
@@ -153,6 +167,7 @@ export function ChatMessage({
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
+            {/* Message Bubble */}
             <div
               className={`rounded-lg px-3 py-2 break-all ${
                 isFromOtherUser
