@@ -34,7 +34,7 @@ export function ChatSidebar({ activeChat, onChatSelect }: ChatSidebarProps) {
           }}
           className="p-2 rounded-full hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
         >
-          <GoPlus className="w-6 h-6" />
+          <GoPlus className="w-6 h-6 pointer-events-none" />
         </button>
       </div>
 
