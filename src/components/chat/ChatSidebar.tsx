@@ -9,16 +9,22 @@ import { ChatList } from "./ChatList";
 interface ChatSidebarProps {
   activeChat?: string;
   onChatSelect: (chatId: string) => void;
+  addDialogOpen?: boolean;
+  onAddDialogOpenChange?: (open: boolean) => void;
 }
 
-export function ChatSidebar({ activeChat, onChatSelect }: ChatSidebarProps) {
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+export function ChatSidebar({
+  activeChat,
+  onChatSelect,
+  addDialogOpen = false,
+  onAddDialogOpenChange,
+}: ChatSidebarProps) {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleChatCreated = useCallback(() => {
     setRefreshKey((prev) => prev + 1);
-    setAddDialogOpen(false);
-  }, []);
+    onAddDialogOpenChange?.(false);
+  }, [onAddDialogOpenChange]);
 
   return (
     <>
@@ -30,7 +36,7 @@ export function ChatSidebar({ activeChat, onChatSelect }: ChatSidebarProps) {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            setAddDialogOpen(true)
+            onAddDialogOpenChange?.(true);
           }}
           className="p-2 rounded-full hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
         >
@@ -40,7 +46,7 @@ export function ChatSidebar({ activeChat, onChatSelect }: ChatSidebarProps) {
 
       <AddChatDialog
         open={addDialogOpen}
-        onOpenChange={setAddDialogOpen}
+        onOpenChange={onAddDialogOpenChange || (() => {})}
         onChatCreated={handleChatCreated}
       />
       <ChatList

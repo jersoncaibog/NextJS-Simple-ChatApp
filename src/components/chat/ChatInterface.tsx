@@ -15,6 +15,7 @@ type Message = {
   is_edited: boolean;
   created_at: string;
   updated_at: string;
+  status?: "sending" | "sent";
 };
 
 type ChatParticipantResponse = {
@@ -89,6 +90,8 @@ export function ChatInterface({
       setLoadingMore(true);
 
       try {
+        console.log("loading more messages");
+
         const oldestMessage = messages[0];
         if (!oldestMessage) return;
 
@@ -98,7 +101,7 @@ export function ChatInterface({
           .select("*")
           .eq("chat_id", chatId)
           .lt("created_at", oldestMessage.created_at)
-          .order("created_at", { ascending: true })
+          .order("created_at", { ascending: false })
           .limit(MESSAGES_PER_PAGE);
 
         if (error) throw error;
@@ -107,9 +110,9 @@ export function ChatInterface({
           const scrollHeight = container.scrollHeight;
 
           // Filter out any duplicate messages
-          const newMessages = olderMessages.filter(
-            (oldMsg) => !messages.some((msg) => msg.id === oldMsg.id)
-          );
+          const newMessages = olderMessages
+            .filter((oldMsg) => !messages.some((msg) => msg.id === oldMsg.id))
+            .reverse();
 
           if (newMessages.length > 0) {
             setMessages((prev) => [...newMessages, ...prev]);
@@ -142,22 +145,21 @@ export function ChatInterface({
         .from("messages")
         .select("*")
         .eq("chat_id", chatId)
-        .order("created_at", { ascending: true })
+        .order("created_at", { ascending: false })
         .limit(MESSAGES_PER_PAGE);
 
       if (error) throw error;
 
       if (initialMessages) {
-        setMessages(initialMessages);
+        setMessages(initialMessages.reverse());
         setHasMore(initialMessages.length === MESSAGES_PER_PAGE);
-        scrollToBottom();
       }
     } catch (error) {
       console.error("Error loading messages:", error);
     } finally {
       setLoading(false);
     }
-  }, [chatId, scrollToBottom]);
+  }, [chatId]);
 
   // Load chat details and initial messages
   useEffect(() => {
@@ -270,6 +272,10 @@ export function ChatInterface({
     if (!chatId || !newMessage.trim() || sendingMessage) return;
 
     setSendingMessage(true);
+    const tempId = crypto.randomUUID();
+    const messageContent = newMessage.trim();
+    setNewMessage("");
+
     try {
       if (editingMessage) {
         // Update existing message
@@ -278,13 +284,27 @@ export function ChatInterface({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: editingMessage.id,
-            content: newMessage.trim(),
+            content: messageContent,
           }),
         });
 
         if (!response.ok) throw new Error("Failed to update message");
         setEditingMessage(null);
       } else {
+        // Add temporary message immediately
+        const tempMessage: Message = {
+          id: tempId,
+          chat_id: chatId,
+          content: messageContent,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_edited: false,
+          profile_id: (await supabase.auth.getUser()).data.user?.id || "",
+          status: "sending",
+        };
+        setMessages((prev) => [...prev, tempMessage]);
+        scrollToBottom();
+
         // Send new message
         const {
           data: { user },
@@ -297,16 +317,27 @@ export function ChatInterface({
           {
             chat_id: chatId,
             profile_id: user.id,
-            content: newMessage.trim(),
+            content: messageContent,
           },
         ]);
 
         if (error) throw error;
+
+        // Update temporary message to sent status
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === tempId ? { ...msg, status: "sent" } : msg
+          )
+        );
       }
-      setNewMessage("");
       scrollToBottom();
     } catch (error) {
       console.error("Error sending/updating message:", error);
+      // Remove temporary message if sending failed
+      if (!editingMessage) {
+        setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
+      }
+      setNewMessage(messageContent); // Restore the message content
     } finally {
       setSendingMessage(false);
     }
@@ -325,6 +356,14 @@ export function ChatInterface({
     setNewMessage("");
   };
 
+  useEffect(() => {
+    if (chat) {
+      setTimeout(() => {
+        scrollToBottom();
+      }, 300);
+    }
+  }, [chat, scrollToBottom]);
+
   if (!chatId) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -338,12 +377,14 @@ export function ChatInterface({
           />
           <div className="flex flex-col items-start">
             <h3 className="text-lg leading-6 font-semibold">PotatoChat</h3>
-            <button
-              onClick={onOpenAddChat}
-              className="text-sm leading-5 text-muted-foreground hover:text-foreground underline"
-            >
-              Start a conversation
-            </button>
+            {onOpenAddChat && (
+              <button
+                onClick={onOpenAddChat}
+                className="text-sm leading-5 text-muted-foreground hover:text-foreground underline"
+              >
+                Start a conversation
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -373,7 +414,7 @@ export function ChatInterface({
   return (
     <div className="flex h-full flex-col">
       {/* Chat Header */}
-      <div className="border-b p-4">
+      <div className="border-b p-4 bg-background fixed md:relative top-0 right-0 left-0 z-10">
         <div className="flex items-center gap-3">
           {/* Back button - only on mobile */}
           {onBack && (
@@ -432,27 +473,28 @@ export function ChatInterface({
             </div>
           </div>
         </div>
+        
+        {/* Loading Spinner */}
+        <div
+          className={`absolute left-0 right-0 top-[72px] flex justify-center border-b bg-background/80 py-2 backdrop-blur-sm transition-all duration-200 ${
+            loadingMore
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 -translate-y-full"
+          }`}
+        >
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
       </div>
 
-      {/* Loading Spinner */}
-      <div
-        className={`absolute left-0 right-0 top-[72px] flex justify-center border-b bg-background/80 py-2 backdrop-blur-sm transition-all duration-200 ${
-          loadingMore
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 -translate-y-full"
-        }`}
-      >
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
 
       {/* Chat Messages */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 scroll-smooth"
+        className="flex-1 overflow-y-auto px-4 py-20 md:p-4 scroll-smooth "
         onScroll={handleScroll}
       >
         <div className="flex flex-col justify-end min-h-full">
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 ">
             {messages.map((message) => (
               <ChatMessage
                 key={message.id}
@@ -479,7 +521,10 @@ export function ChatInterface({
       </div>
 
       {/* Message Input */}
-      <form onSubmit={handleSendMessage} className="border-t p-4">
+      <form
+        onSubmit={handleSendMessage}
+        className="border-t p-4 bg-background fixed md:static bottom-0 right-0 left-0"
+      >
         {editingMessage && (
           <span className="text-xs text-muted-foreground">Edit message</span>
         )}

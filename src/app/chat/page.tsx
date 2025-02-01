@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 export default function ChatPage() {
   const [activeChatId, setActiveChatId] = useState<string>();
   const [showSidebar, setShowSidebar] = useState(true);
+  const [showAddChat, setShowAddChat] = useState(false);
 
   // Reset showSidebar when activeChatId changes
   useEffect(() => {
@@ -27,6 +28,8 @@ export default function ChatPage() {
             setActiveChatId(chatId);
             setShowSidebar(false);
           }}
+          addDialogOpen={showAddChat}
+          onAddDialogOpenChange={setShowAddChat}
         />
       </div>
 
@@ -39,6 +42,7 @@ export default function ChatPage() {
         <ChatInterface
           chatId={activeChatId}
           onBack={() => setShowSidebar(true)}
+          onOpenAddChat={() => setShowAddChat(true)}
         />
       </main>
     </div>
