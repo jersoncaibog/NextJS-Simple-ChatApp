@@ -78,7 +78,7 @@ export default function Home() {
     fetchUserData();
   }, [router]);
 
-  // TODO: 
+  // TODO:
   // - error: duplicate adding chat
   // - error: email isnt getting added to new profiles
 

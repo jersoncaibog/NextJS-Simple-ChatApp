@@ -98,11 +98,12 @@ create policy "Users can update their own messages" on messages for
 update using (profile_id = auth.uid());
 -- Create function to handle new user signup
 create or replace function public.handle_new_user() returns trigger as $$ begin
-insert into public.profiles (id, full_name, avatar_url)
+insert into public.profiles (id, full_name, avatar_url, email)
 values (
         new.id,
         new.raw_user_meta_data->>'full_name',
-        new.raw_user_meta_data->>'avatar_url'
+        new.raw_user_meta_data->>'avatar_url',
+        new.email
     );
 return new;
 end;
